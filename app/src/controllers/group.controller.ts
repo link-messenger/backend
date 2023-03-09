@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { GROUP_STATUS, GROUP_STATUSMAP, ROLES, ROLESMAP } from '../constants';
+import { GROUP_STATUS, GROUP_STATUS_MAP, ROLES, ROLESMAP } from '../constants';
 import { NotFoundError } from '../errors';
 import { Group } from '../models';
 
 export const createGroupController = async (req: Request, res: Response) => {
   // @ts-ignore
   const user = req.user;
-	const { name, description, status } = req.body;
+	const { name, description, status,  } = req.body;
   const group = await Group.create({
 		name,
 		description,
@@ -25,7 +25,7 @@ export const getGroupController = async (req: Request, res: Response) => {
   const user = req.user;
   const { search } = req.params;
   const group = await Group.find({
-		status: GROUP_STATUSMAP.public,
+		status: GROUP_STATUS_MAP.public,
 		$or: [
 			{
 				name: {
@@ -51,7 +51,6 @@ export const updateGroupController = async (req: Request, res: Response) => {
   const user = req.user;
   const { id } = req.params;
   const { name, description, status } = req.body;
-  console.log(id)
   const group = await Group.findOneAndUpdate(
     {
       _id: id,

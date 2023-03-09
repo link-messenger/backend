@@ -7,7 +7,7 @@ import 'express-async-errors';
 import { connectMongo, connectRedis } from './src/config';
 import { authMiddleware, dotenv } from './src/middlewares';
 import { errorHandler } from './src/middlewares';
-import { authRouter, groupRouter } from './src/routes';
+import { authRouter, conversationRouter, groupRouter } from './src/routes';
 import { getEnv } from './src/utils';
 
 dotenv();
@@ -36,6 +36,7 @@ app.use(authMiddleware);
 
 app.use('/auth', authRouter);
 app.use('/group', groupRouter);
+app.use('/conversation', conversationRouter);
 app.use(errorHandler);
 
 http.listen(PORT, async () => {
