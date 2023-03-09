@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "es2016",
+		"module": "commonjs",
+		"outDir": "./dist",
+		"isolatedModules": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitAny": false,
+		"alwaysStrict": true,
+		"allowSyntheticDefaultImports": true,
+		"skipLibCheck": true,
+		"strict": true
+	},
+	"include": ["src/**/*.ts", "__test__/**/*.ts"],
+	"exclude": ["node_modules", "**/*.d.ts", "tsconfig.json"]
+}
