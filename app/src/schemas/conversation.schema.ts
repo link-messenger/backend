@@ -11,3 +11,9 @@ export const deleteConversationSchema = yup.object({
 		id: yup.string().required(),
 	}),
 });
+
+export const getUserDetailSchema = yup.object({
+	params: yup.object({
+		id: yup.string().required(),
+	}),
+});

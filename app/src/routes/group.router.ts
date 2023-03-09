@@ -3,6 +3,7 @@ import {
 	createGroupController,
 	deleteGroupController,
 	getGroupController,
+	getGroupDetailController,
 	getUserGroupsController,
 	updateGroupController,
 } from '../controllers';
@@ -10,6 +11,7 @@ import { protectedRoute, validate } from '../middlewares';
 import {
 	createGroupSchema,
 	deleteGroupSchema,
+	getGroupDetailSchema,
 	getGroupSchema,
 	updateGroupSchema,
 } from '../schemas';
@@ -23,6 +25,7 @@ router.get(
 	protectedRoute,
 	getGroupController
 );
+router.get('/:id', validate(getGroupDetailSchema), protectedRoute, getGroupDetailController);
 router.post(
 	'/',
 	validate(createGroupSchema),

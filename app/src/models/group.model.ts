@@ -30,6 +30,7 @@ const GroupModel = new Schema(
 				},
 				role: {
 					type: String,
+					required: true,
 					enum: ROLES,
 					default: ROLESMAP.user,
 				},

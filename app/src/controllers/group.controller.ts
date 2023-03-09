@@ -25,9 +25,9 @@ export const getGroupController = async (req: Request, res: Response) => {
   const user = req.user;
   const { search } = req.params;
   const group = await Group.find({
-		status: GROUP_STATUS_MAP.public,
 		$or: [
 			{
+				status: GROUP_STATUS_MAP.public,
 				name: {
 					$regex: '.*' + search + '.*',
 				},
@@ -36,11 +36,6 @@ export const getGroupController = async (req: Request, res: Response) => {
 				link: search,
 			},
 		],
-		members: {
-			$elemMatch: {
-				user: user._id,
-			},
-		},
 	});
   if (!group.length) throw new NotFoundError('Group not found');
   return res.status(200).json(group);
@@ -93,6 +88,23 @@ export const deleteGroupController = async (req: Request, res: Response) => {
   return res.status(200).json(group);
 }
 
+export const getGroupDetailController = async (req: Request, res: Response) => {
+  // @ts-ignore
+  const user = req.user;
+  const { id } = req.params;
+  console.log('call')
+  const group = await Group.findOne({
+    _id: id,
+    members: {
+      $elemMatch: {
+        user: user._id,
+      },
+    },
+  }).populate(['members.user']);
+
+  if (!group) throw new NotFoundError('Group not found');
+  return res.status(200).json(group);
+}
 
 export const getUserGroupsController = async (req: Request, res: Response) => {
   // @ts-ignore
@@ -106,3 +118,4 @@ export const getUserGroupsController = async (req: Request, res: Response) => {
   });
   return res.status(200).json(groups);
 }
+

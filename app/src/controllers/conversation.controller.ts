@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { NotFoundError } from '../errors';
-import { Conversation } from '../models';
+import { Conversation, User } from '../models';
 
 export const createConversationController = async (
 	req: Request,
@@ -57,4 +57,12 @@ export const deleteConversationController = async (
   });
    if (!conversation) throw new NotFoundError('Conversation not found');
   res.json(conversation);
+};
+
+
+export const getUserDetailController = async (req: Request, res: Response) => {
+	const { id } = req.params;
+	const user = await User.findById(id);
+	if (!user) throw new NotFoundError('User not found');
+	res.json(user);
 };

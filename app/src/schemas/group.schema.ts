@@ -16,6 +16,12 @@ export const getGroupSchema = yup.object({
   }),
 });
 
+export const getGroupDetailSchema = yup.object({
+	params: yup.object({
+		id: yup.string().required(),
+	}),
+}); 
+
 export const updateGroupSchema = yup.object({
   params: yup.object({
     id: yup.string().required(),
