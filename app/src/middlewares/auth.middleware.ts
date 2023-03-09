@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { verify } from 'jsonwebtoken';
+import { Socket } from 'socket.io';
 import { getRedisClient } from '../config';
 import { ForbiddenError, UnauthorizedError } from '../errors';
 import { User } from '../models';
