@@ -93,7 +93,6 @@ export const getGroupDetailController = async (req: Request, res: Response) => {
   if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
   const { id } = req.params;
-  console.log('call')
   const group = await Group.findOne({
     _id: id,
     members: {

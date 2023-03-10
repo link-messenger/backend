@@ -73,10 +73,12 @@ export const registerController = async (req: Request, res: Response) => {
 		EX: parseInt(getEnv('REDIS_TOKEN_EXPIRATION')),
 	});
 	res.status(201).json({
-		data: {
+		user: {
 			username: user.username,
+			name: user.name,
 			email: user.email,
 			id: user.id,
+			createdAt: user.createdAt,
 		},
 		token,
 	});
