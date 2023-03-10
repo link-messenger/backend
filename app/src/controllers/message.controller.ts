@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { MESSAGE_PER_PAGE } from '../constants';
+import { ServerError } from '../errors';
+import { hasUser } from '../guards/server.guard';
 import { Message } from '../models';
 
 export const getLastMessages = async (req: Request, res: Response) => {
-	// @ts-ignore
+	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
 	const { id } = req.params;
 	const { page } = req.query;

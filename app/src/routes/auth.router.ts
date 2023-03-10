@@ -8,5 +8,5 @@ const router = Router();
 router.post('/login', validate(loginSchema), loginController);
 router.post('/register', validate(registerSchema), registerController);
 router.get('/me', protectedRoute, profileController);
-
+// router.get('/logout', protectedRoute, )
 export const authRouter = router;

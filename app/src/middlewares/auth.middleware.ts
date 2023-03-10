@@ -2,11 +2,11 @@ import { NextFunction, Request, Response } from 'express';
 import { verify } from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 import { getRedisClient } from '../config';
-import { ForbiddenError, UnauthorizedError } from '../errors';
+import { UnauthorizedError } from '../errors';
 import { User } from '../models';
-import { getEnv } from '../utils';
+import { generateRedisTokenName, getEnv } from '../utils';
 
-export const authMiddleware = async (
+export const protectedRoute = async (
 	req: Request,
 	res: Response,
 	next: NextFunction
@@ -17,20 +17,21 @@ export const authMiddleware = async (
 	if (bearer !== 'Bearer') throw new UnauthorizedError('Invalid token');
 	if (!content) throw new UnauthorizedError('Invalid token');
 	const user = verify(content, getEnv('APP_TOKEN_SECRET')) as {
-		id: string;
-		email: string;
+		email: string,
+		id: string,
 	};
 	if (!user) throw new UnauthorizedError('Invalid Token');
 	const redis = getRedisClient();
-
-	let checkedUser = await redis.get(user.id);
+	const isValid = await redis.get(generateRedisTokenName(user.id));
+	if (!isValid) throw new UnauthorizedError('Invalid Token');
+	let checkedUser: any = await redis.get(user.id);
 
 	if (!checkedUser) {
 		checkedUser = await User.findById(user.id);
-		await redis.set(user.id, JSON.stringify(checkedUser), {
-			EX: parseInt(getEnv('REDIS_TOKEN_EXPIRATION')) ,
+		await redis.set(user.id, JSON.stringify({ ...checkedUser, token }), {
+			EX: parseInt(getEnv('REDIS_TOKEN_EXPIRATION')),
 		});
-		if (!checkedUser) throw new UnauthorizedError('Invalid Token');
+		if (!checkedUser) throw new UnauthorizedError('Invalid User');
 	} else {
 		checkedUser = JSON.parse(checkedUser);
 	}
@@ -38,11 +39,3 @@ export const authMiddleware = async (
 	req.user = checkedUser;
 	return next();
 };
-
-
-export const protectedRoute = async(req: Request,res: Response, next: NextFunction) => {
-	//@ts-ignore
-	const user = req?.user;
-	if (!user) throw new ForbiddenError('Insuficient permissions');
-	return next();
-}

@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
-import { NotFoundError } from '../errors';
+import { NotFoundError, ServerError, UnauthorizedError } from '../errors';
+import { hasUser } from '../guards/server.guard';
 import { Conversation, User } from '../models';
 
 export const createConversationController = async (
 	req: Request,
 	res: Response
 ) => {
-	// @ts-ignore
+	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
 	const { targetUser } = req.body;
 	const checkConv = await Conversation.findOne({
@@ -27,7 +28,7 @@ export const createConversationController = async (
 };
 
 export const getUserConversationController = async (req: Request, res: Response) => {
-  // @ts-ignore
+	if (!hasUser(req)) throw new ServerError('oops! something went wrong'); 
 	const user = req.user;
   const conversations = await Conversation.find({
 		users: {
@@ -44,7 +45,7 @@ export const deleteConversationController = async (
 	req: Request,
 	res: Response
 ) => {
-	// @ts-ignore
+	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
 	const { id } = req.params;
 	const conversation = await Conversation.findOneAndDelete({

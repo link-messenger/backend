@@ -5,7 +5,7 @@ import { createClient } from 'redis';
 import 'express-async-errors';
 
 import { connectMongo, connectRedis, onConnnect } from './src/config';
-import { authMiddleware, dotenv } from './src/middlewares';
+import { dotenv } from './src/middlewares';
 import { errorHandler } from './src/middlewares';
 import { authRouter, conversationRouter, groupRouter, messageRouter } from './src/routes';
 import { getEnv } from './src/utils';
@@ -31,8 +31,6 @@ app.use(
 
 
 io.on('connect', onConnnect);
-
-app.use(authMiddleware);
 
 app.use('/auth', authRouter);
 app.use('/group', groupRouter);

@@ -1,0 +1,1 @@
+export const generateRedisTokenName = (id: string) => `token-${id}`;

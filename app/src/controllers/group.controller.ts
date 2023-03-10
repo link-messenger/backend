@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
-import { GROUP_STATUS, GROUP_STATUS_MAP, ROLES, ROLESMAP } from '../constants';
-import { NotFoundError } from '../errors';
+import { GROUP_STATUS, GROUP_STATUS_MAP, ROLESMAP } from '../constants';
+import { NotFoundError, ServerError } from '../errors';
+import { hasUser } from '../guards/server.guard';
 import { Group } from '../models';
 
 export const createGroupController = async (req: Request, res: Response) => {
-  // @ts-ignore
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
 	const { name, description, status,  } = req.body;
   const group = await Group.create({
@@ -21,7 +22,7 @@ export const createGroupController = async (req: Request, res: Response) => {
 };
 
 export const getGroupController = async (req: Request, res: Response) => {
-  // @ts-ignore
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
   const { search } = req.params;
   const group = await Group.find({
@@ -42,7 +43,7 @@ export const getGroupController = async (req: Request, res: Response) => {
 }
 
 export const updateGroupController = async (req: Request, res: Response) => {
-  // @ts-ignore
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
   const { id } = req.params;
   const { name, description, status } = req.body;
@@ -70,7 +71,7 @@ export const updateGroupController = async (req: Request, res: Response) => {
 }
 
 export const deleteGroupController = async (req: Request, res: Response) => {
-  // @ts-ignore
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
   const { id } = req.params;
 
@@ -89,7 +90,7 @@ export const deleteGroupController = async (req: Request, res: Response) => {
 }
 
 export const getGroupDetailController = async (req: Request, res: Response) => {
-  // @ts-ignore
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
   const { id } = req.params;
   console.log('call')
@@ -107,7 +108,7 @@ export const getGroupDetailController = async (req: Request, res: Response) => {
 }
 
 export const getUserGroupsController = async (req: Request, res: Response) => {
-  // @ts-ignore
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
   const user = req.user;
   const groups = await Group.find({
     members: {
