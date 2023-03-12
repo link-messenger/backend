@@ -14,7 +14,7 @@ const MessageModel = new Schema(
 		},
 		sender: {
 			type: Schema.Types.ObjectId,
-			ref: 'group',
+			ref: 'user',
 			required: true,
 		},
 		to: {

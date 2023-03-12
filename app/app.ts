@@ -6,8 +6,20 @@ import 'express-async-errors';
 import colors from 'colors';
 
 import { connectMongo, connectRedis, onConnnect } from './src/config';
-import { corsMiddleware, dotenv, errorHandler, loggerMiddleware } from './src/middlewares';
-import { authRouter, conversationRouter, groupRouter, messageRouter } from './src/routes';
+import {
+	corsMiddleware,
+	dotenv,
+	errorHandler,
+	loggerMiddleware,
+	socketErrorHandler,
+	socketLoggerMiddleware,
+} from './src/middlewares';
+import {
+	authRouter,
+	conversationRouter,
+	groupRouter,
+	messageRouter,
+} from './src/routes';
 import { getEnv } from './src/utils';
 
 dotenv();
@@ -18,7 +30,7 @@ const http = new httpServer(app);
 const io = new Server(http, {
 	cors: {
 		origin: '*',
-	}
+	},
 });
 
 app.use(express.json());
@@ -29,6 +41,7 @@ app.use(
 );
 app.use(corsMiddleware());
 
+io.use(socketLoggerMiddleware);
 io.on('connect', onConnnect);
 
 app.use(loggerMiddleware);
@@ -53,8 +66,8 @@ http.listen(PORT, async () => {
 			`[${colors.bold.green('SUCCESS')}] server is running on port:`,
 			PORT
 		);
-  } catch (err: any) {
+	} catch (err: any) {
 		console.error(colors.red(`[${colors.bold.bgRed('ERROR')}] ${err.message}`));
-    process.exit(1);
-  }
+		process.exit(1);
+	}
 });

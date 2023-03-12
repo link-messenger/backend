@@ -8,8 +8,12 @@ export const onConnnect = async (socket: Socket) => {
 	const uid: string = socket.handshake.auth.id;
 	const redis = getRedisClient();
 	const tokenIsValid = await redis.get(generateRedisTokenName(uid));
-	await redis.incr('user-counter');
-	if (!tokenIsValid) throw new UnauthorizedError('Invalid Token');
+	if (!tokenIsValid) {
+		console.log('InvalidToken')
+		socket.to(uid).emit('error', 'Invalid Token');
+		socket.disconnect();
+	};
+	await redis.incr('user-counter');	
 	socket.join(uid);
 	socket
 		.on('send-message', (message) =>

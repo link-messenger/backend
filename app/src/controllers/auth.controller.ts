@@ -89,7 +89,14 @@ export const registerController = async (req: Request, res: Response) => {
 export const profileController = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
-	res.json(user);
+	res.json({
+		id: user._id,
+		username: user.username,
+		name: user.name,
+		email: user.email,
+		createdAt: user.createdAt,
+		updatedAt: user.updatedAt,
+	});
 };
 
 // proteceted route

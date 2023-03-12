@@ -9,6 +9,7 @@ interface IMessage {
 	content: any;
 	type: MessageType;
 	to: string;
+	model: 'group' | 'user';
 }
 
 const emitMessage = async (msg, socket: Socket, e: string) => {
@@ -41,8 +42,10 @@ export const sendMesssage = async ({
 			type: message.type,
 			to: message.to,
 			sender: uid,
+			onModel: message.model,
 		})
 	).populate('sender');
+	socket.emit('message-sent', msg);
 	await emitMessage(msg, socket, 'recieve-message');
 };
 
@@ -80,16 +83,16 @@ export const editMessage = async ({
 	socket: Socket;
 	uid: string;
 	message: IEditMessage;
-	}) => {
-		const msg = await Message.findOneAndUpdate(
-			{
-				_id: message.mid,
-				to: message.to,
-				sender: uid,
-			},
-			{
-				content: message.content,
-			}
-		);
-		await emitMessage(msg, socket, 'edit-message');
+}) => {
+	const msg = await Message.findOneAndUpdate(
+		{
+			_id: message.mid,
+			to: message.to,
+			sender: uid,
+		},
+		{
+			content: message.content,
+		}
+	);
+	await emitMessage(msg, socket, 'edit-message');
 };

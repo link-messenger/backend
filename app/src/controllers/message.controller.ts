@@ -7,10 +7,9 @@ import { Message } from '../models';
 export const getLastMessages = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
-	const { id } = req.params;
+	const { id, type } = req.params;
 	const { page } = req.query;
-	const { type } = req.body;
-	const p_num = (page ?? 1).toString() ;
+	const p_num = (page ?? 1).toString();
 	const skip = (parseInt(p_num) - 1) * MESSAGE_PER_PAGE;
 	if (type === 'group') {
 		const messages = await Message.find(
@@ -27,24 +26,26 @@ export const getLastMessages = async (req: Request, res: Response) => {
 				updatedAt: true,
 			},
 			{
+				sort: '-createdAt',
 				skip,
 				limit: MESSAGE_PER_PAGE,
+				populate: 'sender',
 			}
 		);
 		return res.status(200).json(messages);
-	};
+	}
 	const messages = await Message.find(
 		{
 			$or: [
 				{
 					to: id,
-					sender: user._id
+					sender: user._id,
 				},
 				{
 					to: user._id,
-					sender: id
-				}
-			]
+					sender: id,
+				},
+			],
 		},
 		{
 			content: true,
@@ -56,8 +57,15 @@ export const getLastMessages = async (req: Request, res: Response) => {
 			updatedAt: true,
 		},
 		{
+			sort: '-createdAt',
 			skip,
 			limit: MESSAGE_PER_PAGE,
-		}).sort('-createdAt');
+			populate: 'sender',
+		}
+	)
+		// .sort('-createdAt')
+		// .skip(skip)
+		// .limit(MESSAGE_PER_PAGE)
+		// .populate('sender');
 	return res.status(200).json(messages);
 };

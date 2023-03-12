@@ -31,7 +31,7 @@ export const protectedRoute = async (
 		await redis.set(
 			user.id,
 			JSON.stringify({
-				id: checkedUser.id,
+				_id: checkedUser.id,
 				email: checkedUser.email,
 				password: checkedUser.password,
 				username: checkedUser.username,
