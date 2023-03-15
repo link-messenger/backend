@@ -12,18 +12,16 @@ interface IMessage {
 	model: 'group' | 'user';
 }
 
+// TODO: optimize query by moving map to db layer 
 const emitMessage = async (msg, socket: Socket, e: string) => {
 	if (msg.onModel === 'user') {
+		console.log(msg);
 		socket.to(msg.to.toString()).emit(e, msg);
 	} else {
 		const group = await Group.findById(msg.to);
 		if (!group) throw new NotFoundError('No Group Found');
-		const len = group.members.length;
-		const members = group.members;
-
-		for (let i = 0; i < len; i++) {
-			socket.to(members[i].user.toString()).emit(e, msg);
-		}
+		const members = group.members.map(({ user }) => user.toString());
+		socket.to(members).emit(e, msg);
 	}
 };
 
@@ -75,6 +73,8 @@ interface IEditMessage {
 	to: string;
 	mid: string;
 }
+
+// TODO: complete this part!
 export const editMessage = async ({
 	socket,
 	uid,

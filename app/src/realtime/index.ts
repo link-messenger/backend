@@ -1,2 +1,2 @@
-// export * from './group.socket';
+export * from './group.socket';
 export * from './message.socket';

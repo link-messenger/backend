@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { MESSAGE_PER_PAGE } from '../constants';
 import { ServerError } from '../errors';
 import { hasUser } from '../guards/server.guard';
-import { Message } from '../models';
+import { Conversation, Message } from '../models';
 
 export const getLastMessages = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
@@ -34,16 +34,19 @@ export const getLastMessages = async (req: Request, res: Response) => {
 		);
 		return res.status(200).json(messages);
 	}
+
+	const conv = await Conversation.findById(id);
+	const second = conv?.users.find((u) => u.toString() !== user._id.toString());
 	const messages = await Message.find(
 		{
 			$or: [
 				{
-					to: id,
+					to: second,
 					sender: user._id,
 				},
 				{
 					to: user._id,
-					sender: id,
+					sender: second,
 				},
 			],
 		},

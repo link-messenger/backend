@@ -19,6 +19,7 @@ import {
 	conversationRouter,
 	groupRouter,
 	messageRouter,
+	searchRouter,
 } from './src/routes';
 import { getEnv } from './src/utils';
 
@@ -50,6 +51,7 @@ app.use('/auth', authRouter);
 app.use('/group', groupRouter);
 app.use('/conversation', conversationRouter);
 app.use('/message', messageRouter);
+app.use('/search', searchRouter);
 
 app.use(errorHandler);
 
