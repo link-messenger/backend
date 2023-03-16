@@ -39,3 +39,10 @@ export const deleteGroupSchema = yup.object({
     id: yup.string().required(),
   }),
 });
+
+export const grantRoleGroupSchema = yup.object({
+  params: yup.object({
+    id: yup.string().required(),
+    uid: yup.string().required(),
+  }),
+});

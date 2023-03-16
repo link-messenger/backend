@@ -5,6 +5,7 @@ import {
 	getGroupController,
 	getGroupDetailController,
 	getUserGroupsController,
+	grantRoleGroupController,
 	updateGroupController,
 } from '../controllers';
 import { protectedRoute, validate } from '../middlewares';
@@ -13,6 +14,7 @@ import {
 	deleteGroupSchema,
 	getGroupDetailSchema,
 	getGroupSchema,
+	grantRoleGroupSchema,
 	updateGroupSchema,
 } from '../schemas';
 
@@ -44,5 +46,7 @@ router.delete(
 	protectedRoute,
 	deleteGroupController
 );
+
+router.post('/:id/role/:uid', validate(grantRoleGroupSchema), protectedRoute, grantRoleGroupController);
 
 export const groupRouter = router;

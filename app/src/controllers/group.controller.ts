@@ -119,3 +119,40 @@ export const getUserGroupsController = async (req: Request, res: Response) => {
   return res.status(200).json(groups);
 }
 
+export const grantRoleGroupController = async (req: Request, res: Response) => {
+  if (!hasUser(req)) throw new ServerError('oops! something went wrong');
+  const user = req.user;
+  const { id, uid } = req.params;
+  const {role} = req.body;
+  const group = await Group.findOneAndUpdate(
+		{
+			$and: [
+				{
+					members: {
+						$elemMatch: {
+							user: user._id,
+							role: ROLESMAP.admin,
+						},
+					},
+				},
+				{
+					_id: id,
+				},
+				{
+					members: {
+						$elemMatch: {
+							user: uid,
+						},
+					},
+				},
+			],
+		},
+    {
+      $set: {
+        'members.$.role': role,
+      },
+    }
+  );
+  if (!group) throw new NotFoundError('Group not found');
+  return res.status(200).json(group);
+}
