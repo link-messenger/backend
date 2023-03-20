@@ -3,6 +3,7 @@ import colors from 'colors';
 
 import { CustomError } from '../errors';
 import { Socket } from 'socket.io';
+import { ExtendedError } from 'socket.io/dist/namespace';
 
 export const errorHandler = (
 	error,
@@ -24,10 +25,3 @@ export const errorHandler = (
 		},
 	});
 };
-
-export const socketErrorHandler = (socket: Socket, next) => {
-	socket.on('error', (error) => {
-		console.error(`[${colors.red.bold('SOCKET ERROR')}]`, error.message);
-	});
-	next();
-}

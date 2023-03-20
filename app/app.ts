@@ -5,17 +5,18 @@ import { createClient } from 'redis';
 import 'express-async-errors';
 import colors from 'colors';
 
+import { onlineUsers } from './src/global';
 import { connectMongo, connectRedis, onConnnect } from './src/config';
 import {
 	corsMiddleware,
 	dotenv,
 	errorHandler,
 	loggerMiddleware,
-	socketErrorHandler,
 	socketLoggerMiddleware,
 } from './src/middlewares';
 import {
 	authRouter,
+	chatRouter,
 	conversationRouter,
 	groupRouter,
 	messageRouter,
@@ -32,6 +33,7 @@ const io = new Server(http, {
 	cors: {
 		origin: '*',
 	},
+	transports: ['websocket', 'polling'],
 });
 
 app.use(express.json());
@@ -43,6 +45,7 @@ app.use(
 app.use(corsMiddleware());
 
 io.use(socketLoggerMiddleware);
+
 io.on('connect', onConnnect);
 
 app.use(loggerMiddleware);
@@ -52,6 +55,7 @@ app.use('/group', groupRouter);
 app.use('/conversation', conversationRouter);
 app.use('/message', messageRouter);
 app.use('/search', searchRouter);
+app.use('/chat', chatRouter);
 
 app.use(errorHandler);
 
@@ -64,6 +68,13 @@ http.listen(PORT, async () => {
 		await client.connect();
 		await connectMongo();
 		await connectRedis();
+		console.log(`[${colors.bold.green('SUCCESS')}] Redis Client Connected`);
+		console.log(`[${colors.bold.green('SUCCESS')}] MongoDB Connected`);
+		console.log(
+			`[${colors.bold.green(
+				'SUCCESS'
+			)}] onlines: ${onlineUsers.getOnlineUsersCount()}`
+		);
 		console.log(
 			`[${colors.bold.green('SUCCESS')}] server is running on port:`,
 			PORT

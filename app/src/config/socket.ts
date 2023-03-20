@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { UnauthorizedError } from '../errors';
+import { onlineUsers } from '../global';
 import {
 	deleteMessage,
 	editMessage,
@@ -15,12 +15,13 @@ export const onConnnect = async (socket: Socket) => {
 	const redis = getRedisClient();
 	const tokenIsValid = await redis.get(generateRedisTokenName(uid));
 	if (!tokenIsValid) {
-		console.log('InvalidToken');
-		socket.to(uid).emit('error', 'Invalid Token');
+		console.log('Invalid Token');
+		socket.emit('error', 'Invalid Token');
 		socket.disconnect();
 	}
-	await redis.incr('user-counter');
 	socket.join(uid);
+	onlineUsers.add(uid);
+	console.log(onlineUsers.getOnlineUsers());
 	socket
 		.on('send-message', (message) =>
 			sendMesssage({
@@ -46,6 +47,8 @@ export const onConnnect = async (socket: Socket) => {
 		.on('join-group', (gid) => joinUserGroup({ socket, grpid: gid, uid }))
 		.on('leave-group', (gid) => leaveUserGroup({ socket, grpid: gid, uid }))
 		.on('disconnect', async () => {
-			await redis.decr('user-counter');
+			console.log(onlineUsers.getOnlineUsers());
+			onlineUsers.remove(uid);
+			socket.leave(uid);
 		});
 };

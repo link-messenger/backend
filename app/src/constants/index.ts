@@ -27,4 +27,9 @@ export const MESSAGE_TYPE_MAP = {
 
 export const MESSAGE_TYPE = Object.values(MESSAGE_TYPE_MAP);
 
-export const MESSAGE_PER_PAGE = 20;
+export const MESSAGE_PER_PAGE = 100;
+
+export type Model = 'group' | 'user';
+export type MessegeStatus = 'seen' | 'unseen';
+
+export const MESSAGE_STATUS = ['seen', 'unseen']

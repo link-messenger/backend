@@ -1,28 +1,39 @@
-// TODO: sendMessage + deleteMessage + editMessage
-
 import { Socket } from 'socket.io';
-import { Message as MessageType } from '../constants';
-import { NotFoundError } from '../errors';
-import { Group, Message } from '../models';
+import { Message as MessageType, Model, MessegeStatus } from '../constants';
+import { Conversation, Group, Message } from '../models';
+import { onlineUsers } from '../global';
 
 interface IMessage {
 	content: any;
 	type: MessageType;
 	to: string;
-	model: 'group' | 'user';
+	model: Model;
 }
 
-// TODO: optimize query by moving map to db layer 
-const emitMessage = async (msg, socket: Socket, e: string) => {
-	if (msg.onModel === 'user') {
-		console.log(msg);
-		socket.to(msg.to.toString()).emit(e, msg);
-	} else {
-		const group = await Group.findById(msg.to);
-		if (!group) throw new NotFoundError('No Group Found');
-		const members = group.members.map(({ user }) => user.toString());
-		socket.to(members).emit(e, msg);
+const findMembers = async (
+	model: Model,
+	to: string,
+	uid: string,
+	socket: Socket
+) => {
+	let members: string[] = [];
+	if (model === 'group') {
+		const group = await Group.findById(to);
+		if (!group) return [];
+		for (const member of group.members) {
+			if (member.user.toString() === uid) continue;
+			members.push(member.user.toString());
+		}
+		return members;
 	}
+
+	const conv = await Conversation.findById(to);
+	if (!conv) return [];
+	for (const member of conv.users) {
+		if (member.toString() === uid) continue;
+		members.push(member.toString());
+	}
+	return members;
 };
 
 export const sendMesssage = async ({
@@ -34,6 +45,11 @@ export const sendMesssage = async ({
 	uid: string;
 	message: IMessage;
 }) => {
+	let status: MessegeStatus = 'unseen';
+	const members = await findMembers(message.model, message.to, uid, socket);
+	if (!members.length) return socket.emit('error', 'something went wrong');
+	if (members.some((member) => onlineUsers.isOnline(member))) status = 'seen';
+
 	const msg = await (
 		await Message.create({
 			content: message.content,
@@ -41,15 +57,17 @@ export const sendMesssage = async ({
 			to: message.to,
 			sender: uid,
 			onModel: message.model,
+			status: status,
 		})
 	).populate('sender');
 	socket.emit('message-sent', msg);
-	await emitMessage(msg, socket, 'recieve-message');
+	socket.to(members).emit('recieve-message', msg);
 };
 
 interface IDeleteMessage {
 	mid: string;
 	to: string;
+	model: Model;
 }
 export const deleteMessage = async ({
 	socket,
@@ -60,18 +78,23 @@ export const deleteMessage = async ({
 	uid: string;
 	message: IDeleteMessage;
 }) => {
+	const members = await findMembers(message.model, message.to, uid, socket);
+	if (!members.length) return socket.emit('error', 'something went wrong');
+
 	const msg = await Message.findOneAndDelete({
 		_id: message.mid,
 		to: message.to,
 		sender: uid,
 	});
-	await emitMessage(msg, socket, 'delete-message');
+
+	socket.to(members).emit('delete-message', msg);
 };
 
 interface IEditMessage {
 	content: string;
 	to: string;
 	mid: string;
+	model: Model;
 }
 
 // TODO: complete this part!
@@ -84,6 +107,8 @@ export const editMessage = async ({
 	uid: string;
 	message: IEditMessage;
 }) => {
+	const members = await findMembers(message.model, message.to, uid, socket);
+	if (!members.length) return socket.emit('error', 'something went wrong');
 	const msg = await Message.findOneAndUpdate(
 		{
 			_id: message.mid,
@@ -94,5 +119,6 @@ export const editMessage = async ({
 			content: message.content,
 		}
 	);
-	await emitMessage(msg, socket, 'edit-message');
+	socket.emit('message-edited', msg);
+	socket.to(members).emit('edit-message', msg);
 };

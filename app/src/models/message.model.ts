@@ -27,6 +27,12 @@ const MessageModel = new Schema(
 			required: true,
 			enum: ['group', 'user'],
 		},
+		status: {
+			type: String,
+			required: true,
+			enum: ['seen', 'unseen'],
+			default: 'unseen',
+		},
 	},
 	{
 		timestamps: true,

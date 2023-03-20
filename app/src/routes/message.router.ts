@@ -5,6 +5,6 @@ import { lastMessagesSchema } from '../schemas';
 
 const router = Router();
 
-router.get('/:type/:id', validate(lastMessagesSchema) , protectedRoute, getLastMessages);
+router.get('/:id', validate(lastMessagesSchema) , protectedRoute, getLastMessages);
 
 export const messageRouter = router;

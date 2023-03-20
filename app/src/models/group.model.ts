@@ -27,7 +27,6 @@ const GroupModel = new Schema(
 					type: Schema.Types.ObjectId,
 					ref: 'user',
 					required: true,
-					unique: true,
 				},
 				role: {
 					type: String,

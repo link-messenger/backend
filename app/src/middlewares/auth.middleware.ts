@@ -24,7 +24,7 @@ export const protectedRoute = async (
 	if (!user) throw new UnauthorizedError('Invalid Token');
 	const redis = getRedisClient();
 	const isValid = await redis.get(generateRedisTokenName(user.id));
-	if (!isValid) throw new UnauthorizedError('Invalid Token');
+	if (!isValid || isValid !==content) throw new UnauthorizedError('Invalid Token');
 	let checkedUser: any = await redis.get(user.id);
 	if (!checkedUser) {
 		checkedUser = await User.findById(user.id);
