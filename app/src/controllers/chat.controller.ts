@@ -18,6 +18,7 @@ export const getUserChatList = async (req: Request, res: Response) => {
 		},
 		{
 			_id: true,
+			name: true,
 			description: true,
 			updatedAt: true,
 			createdAt: true,

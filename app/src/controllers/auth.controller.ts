@@ -53,6 +53,7 @@ export const registerController = async (req: Request, res: Response) => {
 		...user_data,
 		password: h_password,
 	});
+	user.save();
 	if (!user) throw new ServerError('Something went wrong!');
 	const redis = getRedisClient();
 	const searchToken = await redis.get(

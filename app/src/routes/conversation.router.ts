@@ -11,7 +11,7 @@ import {
 	deleteConversationSchema,
 	getGroupDetailSchema,
 	getUserDetailSchema,
-} from '../schemas';
+} from '../validators';
 
 const router = Router();
 

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Types } from 'mongoose';
 import { MESSAGE_PER_PAGE } from '../constants';
 import { ServerError } from '../errors';
 import { hasUser } from '../guards/server.guard';
@@ -8,33 +9,43 @@ export const getLastMessages = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const { id } = req.params;
 	const { page } = req.query;
-	const p_num = (page ?? 1).toString();
+	const p_num = (!!page ? page : 1).toString();
 	const skip = (parseInt(p_num) - 1) * MESSAGE_PER_PAGE;
-
-	const count = await Message.count({
-		to: id,
-	});
+	const count = await Message.count({ to: id });
 	const messages = await Message.find(
 		{
 			to: id,
 		},
 		{
-			content: true,
-			createdAt: true,
-			sender: true,
-			onModel: true,
-			to: true,
-			type: true,
-			updatedAt: true,
+			__v: 0,
+			onModel: 0,
 		},
 		{
 			sort: '-createdAt',
-			skip,
+			skip: skip,
 			limit: MESSAGE_PER_PAGE,
-			populate: 'sender',
+			populate: {
+				path: 'sender',
+				select: '_id name username avatar',
+			},
 		}
 	);
-	return res
-		.status(200)
-		.json({ messages, count: Math.ceil(count / MESSAGE_PER_PAGE) });
+	const sortedByDate = new Map<string, any[]>();
+	for (let i = 0; i < messages.length; i++) {
+		const date = messages[i].createdAt.toLocaleDateString('en-US', {
+			month: 'numeric',
+			day: 'numeric',
+			year: 'numeric',
+		});
+		if (!sortedByDate.has(date)) {
+			sortedByDate.set(date, []);
+		}
+		// @ts-expect-error
+		sortedByDate.get(date).push(messages[i]);
+	}
+
+	return res.status(200).json({
+		data: Object.fromEntries(sortedByDate),
+		pages: Math.ceil(count / MESSAGE_PER_PAGE),
+	});
 };

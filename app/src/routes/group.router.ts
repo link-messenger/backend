@@ -16,7 +16,7 @@ import {
 	getGroupSchema,
 	grantRoleGroupSchema,
 	updateGroupSchema,
-} from '../schemas';
+} from '../validators';
 
 const router = Router();
 

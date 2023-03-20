@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getLastMessages } from '../controllers';
 import { protectedRoute, validate } from '../middlewares';
-import { lastMessagesSchema } from '../schemas';
+import { lastMessagesSchema } from '../validators';
 
 const router = Router();
 
