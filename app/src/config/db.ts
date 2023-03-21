@@ -4,7 +4,9 @@ import { getEnv } from "../utils";
 
 export const connectMongo = async () => {
   const MONGO_URI = getEnv('MONGO_URL');
-  return mongoose.connect(MONGO_URI);
+  return mongoose.connect(MONGO_URI, {
+		autoIndex: getEnv('NODE_ENV') === 'development',
+	});
 }
 
 let redisClient: RedisClientType | null = null; 

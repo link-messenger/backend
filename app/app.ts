@@ -6,7 +6,12 @@ import 'express-async-errors';
 import colors from 'colors';
 
 import { onlineUsers } from './src/global';
-import { connectMongo, connectRedis, onConnnect } from './src/config';
+import {
+	connectMongo,
+	connectRedis,
+	getMailer,
+	onConnnect,
+} from './src/config';
 import {
 	corsMiddleware,
 	dotenv,
@@ -68,12 +73,20 @@ http.listen(PORT, async () => {
 		await client.connect();
 		await connectMongo();
 		await connectRedis();
+
+		const mailer = getMailer();
+
 		console.log(`[${colors.bold.green('SUCCESS')}] Redis Client Connected`);
 		console.log(`[${colors.bold.green('SUCCESS')}] MongoDB Connected`);
 		console.log(
 			`[${colors.bold.green(
 				'SUCCESS'
 			)}] onlines: ${onlineUsers.getOnlineUsersCount()}`
+		);
+		console.log(
+			`[${colors.bold.green(
+				'SUCCESS'
+			)}] Email Successfully connected: ${mailer.getEmail()}`
 		);
 		console.log(
 			`[${colors.bold.green('SUCCESS')}] server is running on port:`,

@@ -33,3 +33,7 @@ export type Model = 'group' | 'user';
 export type MessegeStatus = 'seen' | 'unseen';
 
 export const MESSAGE_STATUS = ['seen', 'unseen']
+
+export const OTP_LENGTH = 7;
+
+export * from './mails';
