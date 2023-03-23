@@ -18,6 +18,7 @@ import {
 	refreshTokenSchema,
 	registerSchema,
 	resetPasswordSchema,
+	updateAccountSchema,
 	verifyOtpSchema,
 } from '../validators';
 
@@ -30,7 +31,7 @@ router.get('/me', protectedRoute, profileController);
 router.delete('/me', protectedRoute, deleteAccountController);
 router.put(
 	'/me',
-	validate(updateAccountController),
+	validate(updateAccountSchema),
 	protectedRoute,
 	updateAccountController
 );
@@ -38,7 +39,6 @@ router.put(
 router.post(
 	'/token/refresh',
 	validate(refreshTokenSchema),
-	protectedRoute,
 	refreshTokenController
 );
 
@@ -47,14 +47,12 @@ router.post('/otp/verify', validate(verifyOtpSchema), verifyOtpController);
 router.post(
 	'/password/forget',
 	validate(forgetPasswordSchema),
-	protectedRoute,
 	forgetPasswordController
 );
 
 router.post(
 	'/password/reset',
 	validate(resetPasswordSchema),
-	protectedRoute,
 	resetPasswordController
 );
 

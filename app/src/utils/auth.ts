@@ -1,4 +1,5 @@
 import otp from 'otp-generator';
+import jwt from 'jsonwebtoken';
 
 import { getRedisClient } from '../config';
 import { OTP_LENGTH } from '../constants';
@@ -23,6 +24,40 @@ export const setRedisToken = async (
 	});
 };
 
+export const generatePairToken = (user) => {
+	const token = jwt.sign(
+		{
+			id: user._id.toString(),
+			email: user.email,
+		},
+		getEnv('APP_TOKEN_SECRET')
+	);
+
+	const refresh = jwt.sign(
+		{
+			id: user._id.toString(),
+			email: user.email,
+		},
+		getEnv('APP_REFRESH_SECRET')
+	);
+
+	return { token, refresh };
+};
+
+export const generateToken = (user) => {
+	return jwt.sign(
+		{
+			id: user._id,
+			email: user.email,
+		},
+		getEnv('APP_TOKEN_SECRET')
+	);
+};
+
+export const verifyRefresh = (refresh: string) => {
+	return jwt.verify(refresh, getEnv('APP_REFRESH_SECRET'));
+};
+
 export const getRedisToken = async (id: string) => {
 	const redis = getRedisClient();
 	const searchToken = await redis.get(generateRedisTokenName(id));
@@ -33,6 +68,8 @@ export const getRedisToken = async (id: string) => {
 		searchRefresh,
 	};
 };
+
+
 
 export const deleteRedisToken = async (id: string) => {
 	const redis = getRedisClient();

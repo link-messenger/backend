@@ -20,7 +20,6 @@ const emitToGrp = (grp, usr, socket: Socket, e: string) => {
 };
 
 export const joinUserGroup = async ({ socket, grpid, uid }: IGroupUser) => {
-	console.log('j', grpid);
 	const grp = await Group.findOneAndUpdate(
 		{
 			_id: grpid,
@@ -55,7 +54,8 @@ export const joinUserGroup = async ({ socket, grpid, uid }: IGroupUser) => {
 			},
 		});
 		if (!isJoined) {
-			throw new NotFoundError('Group not found');
+			console.error('not found');
+			return;
 		}
 		return socket.emit('already-joined', isJoined);
 	}

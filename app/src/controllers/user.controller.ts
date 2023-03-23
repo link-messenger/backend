@@ -28,3 +28,12 @@ export const getUserProfile = async (req: Request, res: Response) => {
 		status,
 	});
 };
+
+
+// rba
+export const getOnlineUsers = async (req: Request, res: Response) => {
+	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
+
+	const online = onlineUsers.getOnlineUsers();
+	res.json(online);
+}

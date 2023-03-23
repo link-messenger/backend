@@ -5,7 +5,7 @@ import { findRelatedUsers } from '../services';
 import { onlineUsers } from '../global';
 
 interface IMessage {
-	content: any;
+	content: string;
 	type: MessageType;
 	to: string;
 	model: Model;
@@ -20,9 +20,9 @@ export const sendMesssage = async ({
 	uid: string;
 	message: IMessage;
 }) => {
+	if (message.content.trim().length === 0) return;
 	let status: MessegeStatus = 'unseen';
 	const members = await findRelatedUsers(message.model, message.to, uid);
-	if (!members.length) return socket.emit('error', 'something went wrong');
 	if (members.some((member) => onlineUsers.isOnline(member))) status = 'seen';
 
 	const msgC = await Message.create({
@@ -55,7 +55,6 @@ export const deleteMessage = async ({
 	message: IDeleteMessage;
 }) => {
 	const members = await findRelatedUsers(message.model, message.to, uid);
-	if (!members.length) return socket.emit('error', 'something went wrong');
 
 	const msg = await Message.findOneAndDelete({
 		_id: message.mid,
@@ -84,7 +83,6 @@ export const editMessage = async ({
 	message: IEditMessage;
 }) => {
 	const members = await findRelatedUsers(message.model, message.to, uid);
-	if (!members.length) return socket.emit('error', 'something went wrong');
 	const msg = await Message.findOneAndUpdate(
 		{
 			_id: message.mid,

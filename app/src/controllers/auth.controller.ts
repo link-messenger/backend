@@ -1,6 +1,5 @@
 import { hash, verify } from 'argon2';
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 
 import { getRedisClient } from '../config';
 import { FORGET_PASSWORD_MAIL, LOGIN_MAIL } from '../constants';
@@ -13,32 +12,16 @@ import {
 	deleteRedisToken,
 	expireOTP,
 	generateRedisRefreshName,
-	getEnv,
+	generatePairToken,
 	getRedisToken,
 	getUnverifiedUser,
 	saveUnverifiedUser,
 	setRedisToken,
+	generateToken,
+	verifyRefresh,
 } from '../utils';
 
-const generateToken = (user) => {
-	const token = jwt.sign(
-		{
-			id: user._id,
-			email: user.email,
-		},
-		getEnv('APP_TOKEN_SECRET')
-	);
 
-	const refresh = jwt.sign(
-		{
-			id: user._id,
-			email: user.email,
-		},
-		getEnv('APP_REFRESH_SECRET')
-	);
-
-	return { token, refresh };
-};
 
 export const loginController = async (req: Request, res: Response) => {
 	const { email, password, device } = req.body;
@@ -46,22 +29,26 @@ export const loginController = async (req: Request, res: Response) => {
 		email: email,
 	});
 	if (!user) throw new UnauthorizedError('wrong credentials');
-	const { searchToken, searchRefresh } = await getRedisToken(
+	const deviceHash = await hash(device);
+	const foundDevice = await UserDevice.findOne({
+		user: user._id,
+		hash: deviceHash,	
+	});
+	const { searchRefresh } = await getRedisToken(
 		user._id.toString()
 	);
-	if (searchToken && searchRefresh) {
-		return res.json({
-			token: searchToken,
+	if (searchRefresh && foundDevice) {
+		const token = generateToken(user);
+		setRedisToken(user._id.toString(), token, searchRefresh);
+		return res.status(200).json({
+			token: token,
 			refresh: searchRefresh,
 		});
 	}
 
 	const authorized = verify(user.password, password);
-	if (!authorized || !device) throw new Error('wrong credentials!');
-	const deviceHash = await hash(device + user._id.toString());
-	const foundDevice = await UserDevice.findOne({
-		hash: deviceHash,
-	});
+	if (!authorized) throw new Error('wrong credentials!');
+	
 	if (!foundDevice) {
 		const userDevice = await UserDevice.create({
 			hash: deviceHash,
@@ -72,7 +59,7 @@ export const loginController = async (req: Request, res: Response) => {
 	}
 	const otp = createOTP();
 	await saveUnverifiedUser(user, otp);
-	await sendEmail({
+	sendEmail({
 		to: user.email,
 		subject: LOGIN_MAIL.subject,
 		html: LOGIN_MAIL.html(otp),
@@ -91,7 +78,7 @@ export const registerController = async (req: Request, res: Response) => {
 	});
 	user.save();
 	if (!user) throw new ServerError('Something went wrong!');
-	const deviceHash = await hash(device + user._id.toString());
+	const deviceHash = await hash(device);
 
 	const userDevice = await UserDevice.create({
 		hash: deviceHash,
@@ -100,7 +87,7 @@ export const registerController = async (req: Request, res: Response) => {
 	});
 	userDevice.save();
 
-	const { token, refresh } = generateToken(user);
+	const { token, refresh } = generatePairToken(user);
 	setRedisToken(user._id.toString(), token, refresh);
 
 	res.status(201).json({
@@ -157,10 +144,10 @@ export const deleteAccountController = async (req: Request, res: Response) => {
 };
 
 export const refreshTokenController = async (req: Request, res: Response) => {
-	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
-	const user = req.user;
-
 	const { refresh } = req.body;
+	const userToken = verifyRefresh(refresh) as { id: string };
+	const user = await User.findById(userToken.id);
+	if (!user) throw new UnauthorizedError('unAuthorized');
 	const redis = getRedisClient();
 	const checkRefresh = await redis.get(
 		generateRedisRefreshName(user._id.toString())
@@ -168,7 +155,7 @@ export const refreshTokenController = async (req: Request, res: Response) => {
 	if (!checkRefresh || refresh !== checkRefresh)
 		throw new UnauthorizedError('unAuthorized');
 
-	const { token, refresh: newRefresh } = generateToken(user);
+	const { token, refresh: newRefresh } = generatePairToken(user);
 
 	setRedisToken(user._id.toString(), token, newRefresh);
 
@@ -207,7 +194,7 @@ export const verifyOtpController = async (req: Request, res: Response) => {
 	const { otp } = req.body;
 	const user = await getUnverifiedUser(otp);
 	if (!user) throw new UnauthorizedError('invalid otp');
-	const { token, refresh } = generateToken(user);
+	const { token, refresh } = generatePairToken(user);
 	await expireOTP(otp);
 	setRedisToken(user._id.toString(), token, refresh);
 	res.json({
@@ -226,7 +213,7 @@ export const forgetPasswordController = async (req: Request, res: Response) => {
 
 	const otp = createOTP();
 	await saveUnverifiedUser(user, otp);
-	await sendEmail({
+	sendEmail({
 		to: user.email,
 		subject: FORGET_PASSWORD_MAIL.subject,
 		html: FORGET_PASSWORD_MAIL.html(otp),
@@ -244,11 +231,19 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 	const user = await User.findById(unverified._id);
 	if (!user) throw new ServerError('something went wrong');
 	const h_password = await hash(password);
-	user.password = h_password;
-	await user.save();
+	const updated = await User.findByIdAndUpdate(
+		user._id,
+		{
+			password: h_password,
+		},
+		{
+			new: true,
+		}
+	);
+	if(!updated) throw new ServerError('something went wrong');
 	await expireOTP(otp);
-	const { token, refresh } = generateToken(user);
-	await setRedisToken(user._id.toString(), token, refresh);
+	const { token, refresh } = generatePairToken(updated);
+	await setRedisToken(updated._id.toString(), token, refresh);
 	res.json({
 		message: 'password reset successfully',
 		token,

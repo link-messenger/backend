@@ -7,11 +7,27 @@ import { Message } from '../models';
 
 export const getLastMessages = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
+	const user = req.user;
 	const { id } = req.params;
 	const { page } = req.query;
 	const p_num = (!!page ? page : 1).toString();
 	const skip = (parseInt(p_num) - 1) * MESSAGE_PER_PAGE;
 	const count = await Message.count({ to: id });
+	Message.updateMany(
+		{
+			to: id,
+			
+			sender: {
+				$ne: user._id,
+			},
+			status: 'unseen',
+		},
+		{
+			$set: {
+				status: 'seen',
+			},
+		}
+	);
 	const messages = await Message.find(
 		{
 			to: id,
