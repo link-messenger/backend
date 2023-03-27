@@ -1,8 +1,15 @@
 import { hash, verify } from 'argon2';
 import { Request, Response } from 'express';
+import { v4 } from 'uuid';
 
 import { getRedisClient } from '../config';
-import { FORGET_PASSWORD_MAIL, LOGIN_MAIL } from '../constants';
+import {
+	FORGET_PASSWORD_MAIL,
+	LOGIN_MAIL,
+	REGISTER_MAIL,
+	ROLESMAP,
+	USER_STATUS_MAP,
+} from '../constants';
 import { ServerError, UnauthorizedError } from '../errors';
 import { hasUser } from '../guards/server.guard';
 import { User, UserDevice } from '../models';
@@ -19,9 +26,8 @@ import {
 	setRedisToken,
 	generateToken,
 	verifyRefresh,
+	hashCode,
 } from '../utils';
-
-
 
 export const loginController = async (req: Request, res: Response) => {
 	const { email, password, device } = req.body;
@@ -29,14 +35,13 @@ export const loginController = async (req: Request, res: Response) => {
 		email: email,
 	});
 	if (!user) throw new UnauthorizedError('wrong credentials');
-	const deviceHash = await hash(device);
+	const deviceHash = hashCode(device);
+
 	const foundDevice = await UserDevice.findOne({
 		user: user._id,
-		hash: deviceHash,	
+		hash: deviceHash,
 	});
-	const { searchRefresh } = await getRedisToken(
-		user._id.toString()
-	);
+	const { searchRefresh } = await getRedisToken(user._id.toString());
 	if (searchRefresh && foundDevice) {
 		const token = generateToken(user);
 		setRedisToken(user._id.toString(), token, searchRefresh);
@@ -48,7 +53,7 @@ export const loginController = async (req: Request, res: Response) => {
 
 	const authorized = verify(user.password, password);
 	if (!authorized) throw new Error('wrong credentials!');
-	
+
 	if (!foundDevice) {
 		const userDevice = await UserDevice.create({
 			hash: deviceHash,
@@ -78,7 +83,7 @@ export const registerController = async (req: Request, res: Response) => {
 	});
 	user.save();
 	if (!user) throw new ServerError('Something went wrong!');
-	const deviceHash = await hash(device);
+	const deviceHash = hashCode(device);
 
 	const userDevice = await UserDevice.create({
 		hash: deviceHash,
@@ -87,19 +92,15 @@ export const registerController = async (req: Request, res: Response) => {
 	});
 	userDevice.save();
 
-	const { token, refresh } = generatePairToken(user);
-	setRedisToken(user._id.toString(), token, refresh);
-
+	const otp = createOTP();
+	await saveUnverifiedUser(user, otp);
+	sendEmail({
+		to: user.email,
+		subject: REGISTER_MAIL.subject,
+		html: REGISTER_MAIL.html(otp),
+	});
 	res.status(201).json({
-		user: {
-			username: user.username,
-			name: user.name,
-			email: user.email,
-			id: user.id,
-			createdAt: user.createdAt,
-		},
-		token,
-		refresh,
+		message: 'otp sent to your email',
 	});
 };
 
@@ -136,7 +137,16 @@ export const logoutController = async (req: Request, res: Response) => {
 export const deleteAccountController = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
-	await User.findByIdAndDelete(user._id);
+	const rnd = v4();
+	await User.findByIdAndUpdate(user._id, {
+		$set: {
+			username: rnd,
+			name: USER_STATUS_MAP.deleted,
+			email: rnd,
+			role: ROLESMAP.user,
+			status: USER_STATUS_MAP.deleted,
+		},
+	});
 	deleteRedisToken(user._id.toString());
 	res.status(200).json({
 		message: 'account deleted successfully',
@@ -194,6 +204,13 @@ export const verifyOtpController = async (req: Request, res: Response) => {
 	const { otp } = req.body;
 	const user = await getUnverifiedUser(otp);
 	if (!user) throw new UnauthorizedError('invalid otp');
+	if (user.status === USER_STATUS_MAP.unverified) {
+		await User.findByIdAndUpdate(user._id, {
+			$set: {
+				status: USER_STATUS_MAP.verified,
+			},
+		});
+	}
 	const { token, refresh } = generatePairToken(user);
 	await expireOTP(otp);
 	setRedisToken(user._id.toString(), token, refresh);
@@ -240,7 +257,7 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 			new: true,
 		}
 	);
-	if(!updated) throw new ServerError('something went wrong');
+	if (!updated) throw new ServerError('something went wrong');
 	await expireOTP(otp);
 	const { token, refresh } = generatePairToken(updated);
 	await setRedisToken(updated._id.toString(), token, refresh);

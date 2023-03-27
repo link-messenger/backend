@@ -13,6 +13,7 @@ export const getLastMessages = async (req: Request, res: Response) => {
 	const p_num = (!!page ? page : 1).toString();
 	const skip = (parseInt(p_num) - 1) * MESSAGE_PER_PAGE;
 	const count = await Message.count({ to: id });
+
 	Message.updateMany(
 		{
 			to: id,

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { sort } from 'fast-sort';
 import { Types } from 'mongoose';
 
+
 import { ServerError } from '../errors';
 import { hasUser } from '../guards/server.guard';
 import { Conversation, Group, Message } from '../models';
@@ -133,7 +134,7 @@ export const getUserChatList = async (req: Request, res: Response) => {
 						updatedAt: sender.updatedAt,
 					},
 				},
-				unseen: lastAndUnseen.unseen_count,
+				unseen: lastAndUnseen.unseen_count || 0,
 			});
 			continue;
 		}
@@ -171,7 +172,7 @@ export const getUserChatList = async (req: Request, res: Response) => {
 						updatedAt: sender.updatedAt,
 					},
 				},
-				unseen: lastAndUnseen.unseen_count,
+				unseen: lastAndUnseen.unseen_count || 0,
 			});
 			continue;
 		}

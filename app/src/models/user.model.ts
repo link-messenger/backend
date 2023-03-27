@@ -1,5 +1,7 @@
 import { Schema, model } from 'mongoose';
 
+import { ROLES, ROLESMAP, USER_STATUS, USER_STATUS_MAP } from '../constants';
+
 const UserModel = new Schema(
 	{
 		name: {
@@ -28,6 +30,18 @@ const UserModel = new Schema(
 		avatar: {
 			type: String,
 			required: false,
+		},
+		role: {
+			type: String,
+			required: true,
+			enum: ROLES,
+			default: ROLESMAP.admin,
+		},
+		status: {
+			type: String,
+			required: true,
+			enum: USER_STATUS,
+			default: USER_STATUS_MAP.unverified,
 		},
 	},
 	{

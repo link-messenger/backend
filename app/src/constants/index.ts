@@ -36,4 +36,13 @@ export const MESSAGE_STATUS = ['seen', 'unseen']
 
 export const OTP_LENGTH = 7;
 
-export * from './mails';
+export * from './mails'; 
+
+export const USER_STATUS = ['UNVERIFIED', 'VERIFIED', 'DELETED'];
+
+export const USER_STATUS_MAP = {
+  unverified: 'UNVERIFIED',
+  verified: 'VERIFIED',
+  deleted: 'DELETED',
+};
+
