@@ -59,3 +59,9 @@ export const resetPasswordSchema = yup.object({
 			.required(),
 	}),
 });
+
+export const checkUsernameUniqueSchema = yup.object({
+	body: yup.object({
+		username: yup.string().required(),
+	}),
+});

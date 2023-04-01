@@ -5,8 +5,9 @@ import { createClient } from 'redis';
 import 'express-async-errors';
 import colors from 'colors';
 
-import { onlineUsers } from './src/global';
+import { activeStreams, onlineUsers, StreamServer } from './src/global';
 import {
+	configStream,
 	connectMongo,
 	connectRedis,
 	getMailer,
@@ -26,12 +27,13 @@ import {
 	groupRouter,
 	messageRouter,
 	searchRouter,
+	streamRouter,
 } from './src/routes';
 import { getEnv } from './src/utils';
 
 dotenv();
 const PORT = getEnv('PORT');
-
+const isStreamEnabled = getEnv('STREAM') === 'TRUE';
 const app = express();
 const http = new httpServer(app);
 const io = new Server(http, {
@@ -48,12 +50,12 @@ app.use(
 	})
 );
 app.use(corsMiddleware());
+app.use(loggerMiddleware);
+app.use(express.static(__dirname + '/public', { dotfiles: 'allow' }));
 
 io.use(socketLoggerMiddleware);
 
 io.on('connect', onConnnect);
-
-app.use(loggerMiddleware);
 
 app.use('/auth', authRouter);
 app.use('/group', groupRouter);
@@ -61,8 +63,14 @@ app.use('/conversation', conversationRouter);
 app.use('/message', messageRouter);
 app.use('/search', searchRouter);
 app.use('/chat', chatRouter);
+app.use('/stream', streamRouter);
 
 app.use(errorHandler);
+
+if (isStreamEnabled) {
+	StreamServer.getInstance().run();
+	configStream();
+}
 
 http.listen(PORT, async () => {
 	try {
@@ -82,6 +90,11 @@ http.listen(PORT, async () => {
 			`[${colors.bold.green(
 				'SUCCESS'
 			)}] onlines: ${onlineUsers.getOnlineUsersCount()}`
+		);
+		console.log(
+			`[${colors.bold.green(
+				'SUCCESS'
+			)}] online streams: ${activeStreams.getCount()}`
 		);
 		console.log(
 			`[${colors.bold.green(

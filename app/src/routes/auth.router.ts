@@ -10,9 +10,10 @@ import {
 	resetPasswordController,
 	updateAccountController,
 	verifyOtpController,
+	checkUsernameUniqueController,
 } from '../controllers';
-import { protectedRoute, validate } from '../middlewares';
 import {
+	checkUsernameUniqueSchema,
 	forgetPasswordSchema,
 	loginSchema,
 	refreshTokenSchema,
@@ -21,6 +22,7 @@ import {
 	updateAccountSchema,
 	verifyOtpSchema,
 } from '../validators';
+import { protectedRoute, validate } from '../middlewares';
 
 const router = Router();
 
@@ -57,5 +59,11 @@ router.post(
 );
 
 router.get('/logout', protectedRoute, logoutController);
+
+router.post(
+	'/username/unique',
+	validate(checkUsernameUniqueSchema),
+	checkUsernameUniqueController
+);
 
 export const authRouter = router;

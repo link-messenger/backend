@@ -69,8 +69,6 @@ export const getRedisToken = async (id: string) => {
 	};
 };
 
-
-
 export const deleteRedisToken = async (id: string) => {
 	const redis = getRedisClient();
 
@@ -105,3 +103,6 @@ export const expireOTP = async (otp: string) => {
 	const redis = getRedisClient();
 	await redis.del(otp);
 };
+
+export const getStreamKey = (streamPath: string) =>
+	streamPath.split('/').at(-1);

@@ -267,3 +267,18 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 		refresh,
 	});
 };
+
+export const checkUsernameUniqueController = async (
+	req: Request,
+	res: Response
+) => {
+	const { username } = req.body;
+	const user = await User.findOne({
+		username,
+	});
+
+	const isAvailable = !user;
+	res.json({
+		isAvailable,
+	});
+}
