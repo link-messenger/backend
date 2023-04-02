@@ -11,6 +11,7 @@ import {
 	connectMongo,
 	connectRedis,
 	getMailer,
+	onConnectStream,
 	onConnnect,
 } from './src/config';
 import {
@@ -42,6 +43,24 @@ const io = new Server(http, {
 	},
 	transports: ['websocket', 'polling'],
 });
+
+if (isStreamEnabled) {
+	const STREAM_SOCKET_PORT = getEnv('APP_STREAM_SOCKET_PORT')
+	const streamSocketServer = new httpServer();
+	const streamIo = new Server(streamSocketServer, {
+		cors: {
+			origin: '*',
+		},
+		transports: ['websocket', 'polling'],
+	});
+	streamIo.on('connect', onConnectStream);
+	streamSocketServer.listen(STREAM_SOCKET_PORT, () => {
+		console.log(
+			`[${colors.bold.green('SUCCESS')}] stream socket server is running on port:`,
+			STREAM_SOCKET_PORT
+		);
+	});
+}
 
 app.use(express.json());
 app.use(

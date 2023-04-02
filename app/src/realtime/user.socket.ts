@@ -9,8 +9,6 @@ interface IOnlineUser {
 	id: string;
 }
 
-
-
 export const onlineUser = async ({
 	socket,
 	uid,

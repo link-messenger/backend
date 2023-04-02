@@ -53,6 +53,10 @@ class ActiveStreams {
 		return keys;
 	}
 
+	public getStatus(key: string) {
+		return this.streams.get(key)?.status;
+	}
+
 	public clear() {
 		this.streams.clear();
 	}
