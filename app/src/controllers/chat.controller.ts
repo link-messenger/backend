@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { sort } from 'fast-sort';
 import { Types } from 'mongoose';
 
-
 import { ServerError } from '../errors';
+import { onlineUsers } from '../global';
 import { hasUser } from '../guards/server.guard';
 import { Conversation, Group, Message } from '../models';
 
@@ -39,6 +39,7 @@ export const getUserChatList = async (req: Request, res: Response) => {
 		select: '_id username name',
 	});
 	const combined: any[] = [];
+
 	const lastMsgs = await Message.aggregate([
 		{
 			$match: {
@@ -155,6 +156,12 @@ export const getUserChatList = async (req: Request, res: Response) => {
 		const lastAndUnseen = lastMsgsMap.get(conv._id.toString());
 		const lastMsg = lastAndUnseen?.last_message;
 		const sender = lastMsg?.sender;
+		const otherUser = conv.users.find((u) => u._id.toString() !== user._id);
+		const status =
+			otherUser?._id.toString() &&
+			onlineUsers.isOnline(otherUser?._id.toString())
+				? 'online'
+				: 'offline';
 		if (lastMsg) {
 			combined.push({
 				_id: conv._id,
@@ -172,6 +179,7 @@ export const getUserChatList = async (req: Request, res: Response) => {
 						updatedAt: sender.updatedAt,
 					},
 				},
+				status,
 				unseen: lastAndUnseen.unseen_count || 0,
 			});
 			continue;
@@ -185,9 +193,6 @@ export const getUserChatList = async (req: Request, res: Response) => {
 		});
 	}
 
-	const sorted = sort(combined).desc(
-		(t) => t?.lastMessage?.createdAt || t?.updatedAt
-	);
-
+	const sorted = sort(combined).desc((t) => t?.lastMessage?.createdAt);
 	return res.json(sorted);
 };

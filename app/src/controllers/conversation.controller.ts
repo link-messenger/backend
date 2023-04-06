@@ -72,6 +72,8 @@ export const deleteConversationController = async (
 	res.json(conversation);
 };
 
+
+// TODO: user detail should be limited
 export const getUserDetailController = async (req: Request, res: Response) => {
 	const { id } = req.params;
 	const user = await User.findById(id);

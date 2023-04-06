@@ -110,16 +110,18 @@ export const profileController = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
 
+	const profile = await User.findById(user._id);
+	if(!profile) throw new ServerError('oops! something went wrong');
 	const devices = await UserDevice.find({
 		user: user._id,
 	});
 	res.json({
-		id: user._id,
-		username: user.username,
-		name: user.name,
-		email: user.email,
-		createdAt: user.createdAt,
-		updatedAt: user.updatedAt,
+		id: profile._id,
+		username: profile.username,
+		name: profile.name,
+		email: profile.email,
+		createdAt: profile.createdAt,
+		updatedAt: profile.updatedAt,
 		devices,
 	});
 };

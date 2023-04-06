@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io';
 import { onlineUsers } from '../global';
+import { Conversation, User } from '../models';
 import {
 	deleteMessage,
 	editMessage,
@@ -22,6 +23,34 @@ export const onConnnect = async (socket: Socket) => {
 	socket.join(uid);
 	onlineUsers.add(uid);
 	console.log(onlineUsers.getOnlineUsers());
+	const conversations = await Conversation.find(
+		{
+			users: {
+				$elemMatch: {
+					$eq: uid,
+				},
+			},
+		},
+		{
+			_id: true,
+			users: true,
+		}
+	).select({
+		users: {
+			$elemMatch: {
+				$ne: uid,
+			},
+		},
+	});
+		for (const conversation of conversations) {
+			socket
+				.to(conversation.users[0].toString())
+				.emit('user-status', {
+					_id: conversation._id.toString(),
+					status: 'online',
+				});
+		}
+
 	socket
 		.on('send-message', (message) =>
 			sendMesssage({
@@ -47,6 +76,11 @@ export const onConnnect = async (socket: Socket) => {
 		.on('join-group', (gid) => joinUserGroup({ socket, grpid: gid, uid }))
 		.on('leave-group', (gid) => leaveUserGroup({ socket, grpid: gid, uid }))
 		.on('disconnect', async () => {
+			for (const conversation of conversations) {
+				socket
+					.to(conversation.users[0].toString())
+					.emit('user-status', {_id:conversation._id.toString(), status: 'offline'});
+			}
 			console.log(onlineUsers.getOnlineUsers());
 			onlineUsers.remove(uid);
 			socket.leave(uid);
