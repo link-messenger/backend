@@ -83,5 +83,13 @@ export const onConnectStream = async (socket: Socket) => {
 					_id: user._id,
 				},
 			});
+		})
+		.on('viewer-count', async(key) => { 
+			const isOnline = activeStreams.getStatus(key) === 'active';
+			if (!isOnline) {
+				return;
+			}
+			const num = await redis.get(key);
+			socket.emit('viewer-update', parseInt(num || '0'));
 		});
 };

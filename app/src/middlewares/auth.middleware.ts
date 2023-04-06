@@ -8,7 +8,7 @@ import { generateRedisTokenName, getEnv } from '../utils';
 
 export const protectedRoute = async (
 	req: Request,
-	res: Response,
+	_res: Response,
 	next: NextFunction
 ) => {
 	const token = (req.headers['Authorization'] ??
@@ -25,30 +25,7 @@ export const protectedRoute = async (
 	const redis = getRedisClient();
 	const isValid = await redis.get(generateRedisTokenName(user.id));
 	if (!isValid || isValid !==content) throw new UnauthorizedError('Invalid Token');
-	let checkedUser: any = await redis.get(user.id);
-	if (!checkedUser) {
-		checkedUser = await User.findById(user.id);
-		await redis.set(
-			user.id,
-			JSON.stringify({
-				_id: checkedUser.id,
-				email: checkedUser.email,
-				password: checkedUser.password,
-				username: checkedUser.username,
-				name: checkedUser.name,
-				createdAt: checkedUser.createdAt,
-				updatedAt: checkedUser.updatedAt,
-				token,
-			}),
-			{
-				EX: parseInt(getEnv('REDIS_TOKEN_EXPIRATION')),
-			}
-		);
-		if (!checkedUser) throw new UnauthorizedError('Invalid User');
-	} else {
-		checkedUser = JSON.parse(checkedUser);
-	}
-	//@ts-ignore
-	req.user = checkedUser;
+	// @ts-expect-error
+	req.user = { _id: user.id, email: user.email };
 	return next();
 };

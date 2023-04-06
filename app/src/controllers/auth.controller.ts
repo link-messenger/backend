@@ -128,7 +128,7 @@ export const profileController = async (req: Request, res: Response) => {
 export const logoutController = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
-	deleteRedisToken(user._id.toString());
+	deleteRedisToken(user._id);
 	res.status(200).json({
 		message: 'logout successfull',
 	});
