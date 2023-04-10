@@ -1,26 +1,53 @@
-import { Socket } from "socket.io";
-import { Model } from "../constants";
-import { onlineUsers } from "../global";
-import { findRelatedUsers } from "../services";
+import { Socket } from 'socket.io';
+import { SOCKET_MESSAGE_EVENTS, UserActivityStatus } from '../constants';
+import { onlineUsers } from '../global';
 
-
-interface IOnlineUser {
-	type: Model;
-	id: string;
-}
-
-export const onlineUser = async ({
+export const onUpdateUserStatus = async ({
 	socket,
 	uid,
-	user,
+	currentActive,
 }: {
 	socket: Socket;
 	uid: string;
-	user: IOnlineUser;
+	currentActive: string;
 }) => {
-	const members = await findRelatedUsers(user.type, user.id, uid);
-	if (!members.length) return socket.emit('error', 'something went wrong');
+	onlineUsers.set({
+		uid,
+		currentActive,
+	});
+};
 
-	onlineUsers.add(user.id);
-	socket.to(members).emit('user-online', user.id);
+export const updateUserCurrentStatus = ({
+	conversations,
+	socket,
+	status,
+	userStatus,
+}: {
+	userStatus: UserActivityStatus;
+	status: UserActivityStatus;
+	conversations: (import('mongoose').Document<
+		unknown,
+		{},
+		{ createdAt: NativeDate; updatedAt: NativeDate } & {
+			users: import('mongoose').Types.ObjectId[];
+		}
+	> &
+		Omit<
+			{ createdAt: NativeDate; updatedAt: NativeDate } & {
+				users: import('mongoose').Types.ObjectId[];
+			} & { _id: import('mongoose').Types.ObjectId },
+			never
+		>)[];
+	socket: Socket;
+}) => {
+	if (userStatus !== UserActivityStatus.OFFLINE) {
+		for (const conversation of conversations) {
+			socket
+				.to(conversation.users[0].toString())
+				.emit(SOCKET_MESSAGE_EVENTS['user.status'], {
+					_id: conversation._id.toString(),
+					status: status,
+				});
+		}
+	}
 };

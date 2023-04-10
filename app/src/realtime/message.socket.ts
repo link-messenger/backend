@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { Message as MessageType, Model, MessegeStatus } from '../constants';
+import { MessageType, MessageStatus, Model, SOCKET_MESSAGE_EVENTS } from '../constants';
 import { Message } from '../models';
 import { findRelatedUsers } from '../services';
 import { onlineUsers } from '../global';
@@ -21,9 +21,17 @@ export const sendMesssage = async ({
 	message: IMessage;
 }) => {
 	if (message.content.trim().length === 0) return;
-	let status: MessegeStatus = 'unseen';
+	let status = MessageStatus.UNSEEN;
 	const members = await findRelatedUsers(message.model, message.to, uid);
-	if (members.some((member) => onlineUsers.isOnline(member))) status = 'seen';
+	if (
+		members.some((member) =>
+			onlineUsers.isCurrentOnline({
+				uid: member,
+				currentActive: message.to,
+			})
+		)
+	)
+		status = MessageStatus.SEEN;
 
 	const msgC = await Message.create({
 		content: message.content,
@@ -36,8 +44,8 @@ export const sendMesssage = async ({
 	msgC.save();
 	const msg = await Message.findById(msgC._id).populate('sender');
 
-	socket.emit('message-sent', msg);
-	socket.to(members).emit('recieve-message', msg);
+	socket.emit(SOCKET_MESSAGE_EVENTS['message.sendConf'], msg);
+	socket.to(members).emit(SOCKET_MESSAGE_EVENTS['message.recieve'], msg);
 };
 
 interface IDeleteMessage {
@@ -62,7 +70,8 @@ export const deleteMessage = async ({
 		sender: uid,
 	});
 
-	socket.to(members).emit('delete-message', msg);
+	socket.emit(SOCKET_MESSAGE_EVENTS['message.deleteConf'], msg);
+	socket.to(members).emit(SOCKET_MESSAGE_EVENTS['message.delete'], msg);
 };
 
 interface IEditMessage {
@@ -93,6 +102,6 @@ export const editMessage = async ({
 			content: message.content,
 		}
 	);
-	socket.emit('message-edited', msg);
-	socket.to(members).emit('edit-message', msg);
+	socket.emit(SOCKET_MESSAGE_EVENTS['message.editConf'], msg);
+	socket.to(members).emit(SOCKET_MESSAGE_EVENTS['message.edit'], msg);
 };

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { GROUP_STATUS, GROUP_STATUS_MAP, ROLESMAP } from '../constants';
+import { GroupStatus, Roles } from '../constants';
 import { NotFoundError, ServerError } from '../errors';
 import { hasUser } from '../guards/server.guard';
 import { Group } from '../models';
@@ -13,7 +13,7 @@ export const createGroupController = async (req: Request, res: Response) => {
 		description,
     members: [{
       user: user._id,
-      role: ROLESMAP.admin,
+      role: Roles.ADMIN,
     }],
     status,
   });
@@ -28,7 +28,7 @@ export const getGroupController = async (req: Request, res: Response) => {
   const group = await Group.find({
 		$or: [
 			{
-				status: GROUP_STATUS_MAP.public,
+				status: GroupStatus.PUBLIC,
 				name: {
 					$regex: '.*' + search + '.*',
 				},
@@ -53,7 +53,7 @@ export const updateGroupController = async (req: Request, res: Response) => {
       members: {
         $elemMatch: {
           user: user._id,
-          role: ROLESMAP.admin,
+          role: Roles.ADMIN,
         },
       },
     },
@@ -80,7 +80,7 @@ export const deleteGroupController = async (req: Request, res: Response) => {
     members: {
       $elemMatch: {
         user: user._id,
-        role: ROLESMAP.admin,
+        role: Roles.ADMIN,
       },
     },
   });
@@ -131,7 +131,7 @@ export const grantRoleGroupController = async (req: Request, res: Response) => {
 					members: {
 						$elemMatch: {
 							user: user._id,
-							role: ROLESMAP.admin,
+							role: Roles.ADMIN,
 						},
 					},
 				},

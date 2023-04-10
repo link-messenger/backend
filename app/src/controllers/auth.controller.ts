@@ -7,8 +7,8 @@ import {
 	FORGET_PASSWORD_MAIL,
 	LOGIN_MAIL,
 	REGISTER_MAIL,
-	ROLESMAP,
-	USER_STATUS_MAP,
+	Roles,
+	UserStatus
 } from '../constants';
 import { ServerError, UnauthorizedError } from '../errors';
 import { hasUser } from '../guards/server.guard';
@@ -143,10 +143,10 @@ export const deleteAccountController = async (req: Request, res: Response) => {
 	await User.findByIdAndUpdate(user._id, {
 		$set: {
 			username: rnd,
-			name: USER_STATUS_MAP.deleted,
+			name: UserStatus.DELETED,
 			email: rnd,
-			role: ROLESMAP.user,
-			status: USER_STATUS_MAP.deleted,
+			role: Roles.USER,
+			status: UserStatus.DELETED,
 		},
 	});
 	deleteRedisToken(user._id.toString());
@@ -206,10 +206,10 @@ export const verifyOtpController = async (req: Request, res: Response) => {
 	const { otp } = req.body;
 	const user = await getUnverifiedUser(otp);
 	if (!user) throw new UnauthorizedError('invalid otp');
-	if (user.status === USER_STATUS_MAP.unverified) {
+	if (user.status === UserStatus.UNVERIFIED) {
 		await User.findByIdAndUpdate(user._id, {
 			$set: {
-				status: USER_STATUS_MAP.verified,
+				status: UserStatus.VERIFIED,
 			},
 		});
 	}

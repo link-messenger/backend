@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { GROUP_STATUS, GROUP_STATUS_MAP, ROLES, ROLESMAP } from '../constants';
+import { GroupStatus, Roles } from '../constants';
 import { nanoid } from 'nanoid';
 
 const GroupModel = new Schema(
@@ -18,8 +18,8 @@ const GroupModel = new Schema(
 		},
 		status: {
 			type: String,
-			enum: GROUP_STATUS,
-			default: GROUP_STATUS_MAP.private,
+			enum: GroupStatus,
+			default: GroupStatus.PRIVATE,
 		},
 		members: [
 			{
@@ -31,8 +31,8 @@ const GroupModel = new Schema(
 				role: {
 					type: String,
 					required: true,
-					enum: ROLES,
-					default: ROLESMAP.user,
+					enum: Roles,
+					default: Roles.USER,
 				},
 			},
 		],

@@ -1,6 +1,8 @@
 import { Schema, model } from 'mongoose';
 
-import { ROLES, ROLESMAP, USER_STATUS, USER_STATUS_MAP } from '../constants';
+import {
+	Roles, UserActivityStatus, UserStatus,
+} from '../constants';
 
 const UserModel = new Schema(
 	{
@@ -16,7 +18,7 @@ const UserModel = new Schema(
 			required: true,
 			index: {
 				unique: true,
-			}
+			},
 		},
 		email: {
 			type: String,
@@ -37,14 +39,20 @@ const UserModel = new Schema(
 		role: {
 			type: String,
 			required: true,
-			enum: ROLES,
-			default: ROLESMAP.admin,
+			enum: Roles,
+			default: Roles.USER,
 		},
 		status: {
 			type: String,
 			required: true,
-			enum: USER_STATUS,
-			default: USER_STATUS_MAP.unverified,
+			enum: UserStatus,
+			default: UserStatus.UNVERIFIED,
+		},
+		activityStatus: {
+			type: String,
+			required: true,
+			enum: UserActivityStatus,
+			default: UserActivityStatus.ONLINE,
 		},
 	},
 	{

@@ -193,6 +193,6 @@ export const getUserChatList = async (req: Request, res: Response) => {
 		});
 	}
 
-	const sorted = sort(combined).desc((t) => t?.lastMessage?.createdAt);
+	const sorted = sort(combined).asc((t) => t?.lastMessage?.createdAt);
 	return res.json(sorted);
 };

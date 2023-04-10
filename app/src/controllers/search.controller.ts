@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { GROUP_STATUS_MAP } from '../constants';
+import { GroupStatus } from '../constants';
 import { Group, User } from '../models';
 
 export const searchChatController = async (req: Request, res: Response) => {
@@ -7,7 +7,7 @@ export const searchChatController = async (req: Request, res: Response) => {
 	const groups = await Group.find({
 		$or: [
 			{
-				status: GROUP_STATUS_MAP.public,
+				status: GroupStatus.PUBLIC,
 				name: {
 					$regex: '.*' + name + '.*',
 					$options: 'i'

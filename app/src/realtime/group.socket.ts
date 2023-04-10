@@ -2,6 +2,7 @@
 
 import { Socket } from 'socket.io';
 import { getRedisClient } from '../config';
+import { SOCKET_MESSAGE_EVENTS } from '../constants';
 import { NotFoundError } from '../errors';
 import { Group } from '../models';
 
@@ -57,12 +58,12 @@ export const joinUserGroup = async ({ socket, grpid, uid }: IGroupUser) => {
 			console.error('not found');
 			return;
 		}
-		return socket.emit('already-joined', isJoined);
+		return socket.emit(SOCKET_MESSAGE_EVENTS['group.alreadyJoined'], isJoined);
 	}
 	const redis = getRedisClient();
 	const user = await redis.get(uid);
-	socket.emit('joined', grp);
-	emitToGrp(grp, JSON.parse(user ?? ''), socket, 'user-joined');
+	socket.emit(SOCKET_MESSAGE_EVENTS['group.joinConfirm'], grp);
+	emitToGrp(grp, JSON.parse(user ?? ''), socket, SOCKET_MESSAGE_EVENTS['group.joined']);
 };
 
 export const leaveUserGroup = async ({ socket, grpid, uid }: IGroupUser) => {
@@ -81,6 +82,6 @@ export const leaveUserGroup = async ({ socket, grpid, uid }: IGroupUser) => {
 	);
 	const redis = getRedisClient();
 	const user = await redis.get(uid);
-	socket.emit('left', grp);
-	emitToGrp(grp, JSON.parse(user ?? ''), socket, 'user-left');
+	socket.emit(SOCKET_MESSAGE_EVENTS['group.leftConfirm'], grp);
+	emitToGrp(grp, JSON.parse(user ?? ''), socket, SOCKET_MESSAGE_EVENTS['group.left']);
 };

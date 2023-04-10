@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ROLESMAP } from '../constants';
+import { Roles } from '../constants';
 import { NotFoundError, ServerError, UnauthorizedError } from '../errors';
 import { onlineUsers } from '../global';
 import { hasUser } from '../guards/server.guard';
@@ -35,7 +35,8 @@ export const getUserProfile = async (req: Request, res: Response) => {
 export const getOnlineUsers = async (req: Request, res: Response) => {
 	if (!hasUser(req)) throw new ServerError('oops! something went wrong');
 	const user = req.user;
-	if (user.role !== ROLESMAP.admin) throw new UnauthorizedError('Unauthorized!');
+	const userData = await User.findById(user._id);
+	if (!userData || userData.role !== Roles.ADMIN) throw new UnauthorizedError('Unauthorized!');
 	const online = onlineUsers.getOnlineUsers();
 	res.json(online);
 }

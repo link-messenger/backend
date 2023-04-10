@@ -1,6 +1,11 @@
 
+type UserStatus = {
+	uid: string;
+	currentActive: string;
+}
+
 class OnlineUsers {
-	private users = new Set();
+	private users = new Map<string, string>();
 	private static instance: OnlineUsers;
 
 	private constructor() {}
@@ -13,8 +18,8 @@ class OnlineUsers {
 		return OnlineUsers.instance;
 	}
 
-	public add(user: string) {
-		this.users.add(user);
+	public set(user: UserStatus) {
+		this.users.set(user.uid, user.currentActive);
 	}
 
 	public remove(user: string) {
@@ -23,6 +28,11 @@ class OnlineUsers {
 
 	public isOnline(user: string) {
 		return this.users.has(user);
+	}
+
+	public isCurrentOnline(user: UserStatus) {
+		const online = this.users.get(user.uid);
+		return !!online && online === user.currentActive;
 	}
 
 	public getOnlineUsers() {

@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { MESSAGE_TYPE, MESSAGE_TYPE_MAP } from '../constants';
+import { MessageType } from '../constants';
 
 const MessageModel = new Schema(
 	{
@@ -9,8 +9,8 @@ const MessageModel = new Schema(
 		},
 		type: {
 			type: String,
-			enum: MESSAGE_TYPE,
-			default: MESSAGE_TYPE_MAP.message,
+			enum:MessageType,
+			default: MessageType.TEXT,
 		},
 		sender: {
 			type: Schema.Types.ObjectId,
