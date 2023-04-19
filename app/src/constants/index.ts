@@ -16,8 +16,8 @@ export enum MessageType {
 }
 
 export enum MessageStatus {
-	SEEN = 'seen',
-	UNSEEN = 'unseen',
+	SEEN = 'SEEN',
+	UNSEEN = 'UNSEEN',
 }
 
 export enum UserStatus {

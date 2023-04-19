@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { MessageType } from '../constants';
+import { MessageStatus, MessageType } from '../constants';
 
 const MessageModel = new Schema(
 	{
@@ -30,8 +30,8 @@ const MessageModel = new Schema(
 		status: {
 			type: String,
 			required: true,
-			enum: ['seen', 'unseen'],
-			default: 'unseen',
+			enum: MessageStatus,
+			default: MessageStatus.UNSEEN,
 		},
 	},
 	{
